@@ -1,6 +1,4 @@
-# Local tool installations and source checkouts.
-/toolchain/
-/qemu/
+# Local source checkouts. Prebuilt tools are tracked.
 /sources/
 
 # Generated outputs and historical local records.

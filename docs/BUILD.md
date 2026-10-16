@@ -1,5 +1,9 @@
 # Build the tools
 
+Prebuilt tools are included in `toolchain/` and `qemu/` for x86_64 Linux.
+Building them is optional; follow [the quick start](../README.md#run) to run
+the demo with the included binaries. The instructions below rebuild the tools.
+
 The demo needs P 0.6-enabled GCC, Binutils and QEMU. Unmodified release sources
 with the same version numbers are not sufficient.
 
@@ -32,6 +36,7 @@ disables automatic downloads.
 From the project root, using fresh build and install directories:
 
 ```bash
+# Replace the included installations only when intentionally rebuilding them.
 bash scripts/build-toolchain.sh
 bash scripts/build-qemu.sh
 python3 scripts/check-host.py

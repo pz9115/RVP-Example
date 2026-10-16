@@ -39,6 +39,8 @@ QEMU elapsed-time samples are diagnostic only. Hardware has not been measured.
 
 - GCC, Binutils, libgcc, glibc and QEMU build successfully.
 - All three optimization variants and negative controls pass after relocation.
+- The tracked prebuilt tools also pass all three variants and negative controls
+  from a clean Git index export, without source trees or a toolchain rebuild.
 - Relocated runs use an empty environment, a temporary `HOME`, and
   `PATH=/usr/bin:/bin`.
 - Compiler helpers, intrinsic headers, startup objects and runtime libraries

@@ -14,16 +14,19 @@ git clone https://github.com/pz9115/RVP-Example.git
 cd RVP-Example
 ```
 
-First build the P-enabled tools using [docs/BUILD.md](docs/BUILD.md).
-Then run from the project root:
+Prebuilt P-enabled GCC, Binutils, the RV64 sysroot and QEMU are included.
+On a compatible x86_64 Linux host, run from the project root without building
+the tools:
 
 ```bash
 python3 scripts/check-host.py
 bash scripts/present.sh
 ```
 
-The scripts use local installations in `toolchain/` and `qemu/`. Binaries,
-component source trees and generated results are not tracked by Git.
+The scripts use the included binaries in `toolchain/` and `qemu/`. No archive
+extraction, Git LFS or system-wide installation is required. Component source
+trees and generated results are not tracked by Git. To rebuild the tools,
+see [docs/BUILD.md](docs/BUILD.md).
 
 Tested host: **x86_64 Ubuntu 24.04.2 / glibc 2.39 under WSL**. Running requires
 Bash, Make, Python 3.10+, coreutils and the shared libraries checked by

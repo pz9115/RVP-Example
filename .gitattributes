@@ -1,0 +1,3 @@
+# Preserve installed tools, libraries and headers byte-for-byte.
+/toolchain/** -text -whitespace linguist-vendored
+/qemu/** -text -whitespace linguist-vendored

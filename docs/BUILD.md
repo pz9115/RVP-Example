@@ -61,6 +61,8 @@ qemu-riscv64 -R 512M -cpu rv64,x-p=true,zmmul=true,zba=true,zbb=true ./program
 ```
 
 The compiler defaults to RV64GC; enable P explicitly.
+Sourcing `env.sh` also sets `RVP_EXAMPLE_ROOT`, used to locate the project
+when starting the notebook from another directory.
 
 ## Run variants
 
@@ -70,3 +72,13 @@ OUT="$PWD/build/custom-O2" OPTFLAGS=-O2 bash scripts/present.sh
 
 Unset external compiler search variables such as `GCC_EXEC_PREFIX`,
 `COMPILER_PATH`, `LIBRARY_PATH` and `CPATH`. Use paths without whitespace.
+
+## Notebook images
+
+The notebook includes a saved PNG preview. To refresh it from validated output:
+
+```bash
+python3 scripts/update-notebook-images.py build/acceptance/O3
+```
+
+Refreshing requires ImageMagick. Viewing the notebook does not.

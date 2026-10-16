@@ -3,7 +3,7 @@
 set -euo pipefail
 bundle=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd -P)
 source_root=${SOURCE_ROOT:-"$bundle/sources"}
-build_root=${BUILD_ROOT:-"${TMPDIR:-/tmp}/rvp-na-build-$UID"}
+build_root=${BUILD_ROOT:-"${TMPDIR:-/tmp}/rvp-example-build-$UID"}
 prefix=${PREFIX:-"$bundle/toolchain"}
 jobs=${JOBS:-2}
 target=riscv64-unknown-linux-gnu
@@ -43,7 +43,7 @@ mkdir "$build_root/gcc"
 cd "$build_root/gcc"
 "$source_root/gcc/configure" --target="$target" --prefix="$prefix" \
   --with-sysroot="$prefix/sysroot" --with-newlib --without-headers \
-  --with-pkgversion='RVP-NA-P0.6' \
+  --with-pkgversion='RVP-Example-P0.6' \
   --enable-languages=c,lto --enable-checking=release --disable-analyzer \
   --disable-multilib --disable-bootstrap --disable-shared --disable-threads \
   --enable-tls --disable-nls --disable-libatomic --disable-libssp \

@@ -1,4 +1,6 @@
-# RV64 P intrinsics: image block matching
+# RVP-Example
+
+RV64 P intrinsics for grayscale image block matching.
 
 Compare scalar C with RV64 P intrinsics using SAD: the sum of absolute pixel
 differences. Both kernels search for a matching 16×16 grayscale image block.
@@ -6,6 +8,11 @@ differences. Both kernels search for a matching 16×16 grayscale image block.
 **P 0.6 is a draft. QEMU results are not hardware performance measurements.**
 
 ## Run
+
+```bash
+git clone https://github.com/pz9115/RVP-Example.git
+cd RVP-Example
+```
 
 First build the P-enabled tools using [docs/BUILD.md](docs/BUILD.md).
 Then run from the project root:
@@ -61,6 +68,8 @@ and common flags, without LTO or automatic vectorization.
 - [Example source and method](examples/rvp-image-sad/README.md)
 - [Build instructions](docs/BUILD.md)
 - [Demonstration outline](docs/DEMO_2_3_MIN.md)
+- [Presentation slides](docs/RVP-Image-SAD.pptx) ([PDF](docs/RVP-Image-SAD.pdf))
+- [Instruction-count chart](docs/images/sad-instruction-counts.png)
 - [Tested tool versions](VERSION.json)
 
 The toolchain configuration supports **RV64, C, static Linux programs**.

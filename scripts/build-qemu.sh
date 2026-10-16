@@ -3,7 +3,7 @@
 set -euo pipefail
 root=$(cd -- "$(dirname -- "$0")/.." && pwd -P)
 source_root=${SOURCE_ROOT:-"$root/sources"}
-build=${QEMU_BUILD_ROOT:-"${TMPDIR:-/tmp}/rvp-na-qemu-build-$UID"}
+build=${QEMU_BUILD_ROOT:-"${TMPDIR:-/tmp}/rvp-example-qemu-build-$UID"}
 prefix=${QEMU_PREFIX:-"$root/qemu"}
 jobs=${JOBS:-2}
 [[ "$jobs" =~ ^[12]$ ]] || { echo 'JOBS must be 1 or 2' >&2; exit 2; }

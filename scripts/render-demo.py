@@ -1,10 +1,27 @@
 #!/usr/bin/env python3
 """Render the actual PGM pixels and verified search costs as a small SVG."""
 
+import base64
 import csv
 import importlib.util
 from pathlib import Path
+import struct
 import sys
+import zlib
+
+
+def grayscale_png(width, height, pixels):
+    """Encode the original pixels without per-pixel SVG rasterization seams."""
+    def chunk(kind, data):
+        return (struct.pack(">I", len(data)) + kind + data
+                + struct.pack(">I", zlib.crc32(kind + data)))
+
+    rows = b"".join(b"\0" + pixels[y * width:(y + 1) * width]
+                    for y in range(height))
+    header = struct.pack(">IIBBBBB", width, height, 8, 0, 0, 0, 0)
+    return (b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR", header)
+            + chunk(b"IDAT", zlib.compress(rows)) + chunk(b"IEND", b""))
+
 
 root = Path(__file__).resolve().parents[1]
 out = Path(sys.argv[1]).resolve() if len(sys.argv) > 1 else root / "build/present"
@@ -13,7 +30,8 @@ spec = importlib.util.spec_from_file_location(
 report = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(report)
 report.verify_images(out / "images")
-svg = ['<svg xmlns="http://www.w3.org/2000/svg" width="720" height="270" '
+svg = ['<svg xmlns="http://www.w3.org/2000/svg" '
+       'xmlns:xlink="http://www.w3.org/1999/xlink" width="720" height="270" '
        'viewBox="0 0 720 270" role="img" aria-labelledby="title desc">',
        '<title id="title">RV64 P image block matching</title>',
        '<desc id="desc">Reference and shifted grayscale images. All 289 '
@@ -27,11 +45,10 @@ for index, (name, label) in enumerate((('reference', 'Reference block'),
     x0 = 20 + index * 230
     svg.append(f'<text x="{x0}" y="55" font-size="14">{label}</text>')
     svg.append(f'<g transform="translate({x0},65) scale(2)" shape-rendering="crispEdges">')
-    for y in range(height):
-        for x in range(width):
-            value = pixels[y * width + x]
-            svg.append(f'<rect x="{x}" y="{y}" width="1" height="1" '
-                       f'fill="#{value:02x}{value:02x}{value:02x}"/>')
+    png = base64.b64encode(grayscale_png(width, height, pixels)).decode("ascii")
+    svg.append(f'<image width="{width}" height="{height}" '
+               f'xlink:href="data:image/png;base64,{png}" '
+               'style="image-rendering:pixelated"/>')
     x, y = (32, 32) if index == 0 else (37, 29)
     svg.append(f'<rect x="{x}" y="{y}" width="16" height="16" '
                'fill="none" stroke="#ff5030" stroke-width="1"/></g>')

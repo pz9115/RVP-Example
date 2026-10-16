@@ -22,7 +22,7 @@ spec = importlib.util.spec_from_file_location(
     "sad_report", root / "examples/rvp-image-sad/report.py")
 module = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(module)
-with tempfile.TemporaryDirectory(prefix="rvp-na-negative-") as tmp:
+with tempfile.TemporaryDirectory(prefix="rvp-example-negative-") as tmp:
     images = Path(tmp) / "images"
     shutil.copytree(out / "images", images)
     module.verify_images(images)

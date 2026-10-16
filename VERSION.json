@@ -1,5 +1,6 @@
 {
-  "project": "rvp-na",
+  "project": "RVP-Example",
+  "repository": "https://github.com/pz9115/RVP-Example",
   "date": "2026-10-16",
   "purpose": "RV64 P grayscale image SAD and block matching",
   "host_build": {"architecture": "x86_64", "os": "Ubuntu 24.04.2 LTS", "glibc": "2.39"},

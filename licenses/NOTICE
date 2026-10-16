@@ -1,0 +1,14 @@
+Licenses
+========
+
+The example code, scripts, notebook and original documentation use the MIT
+License in ../LICENSE.
+
+The unmodified P draft documents in ../docs/spec/ are from the RISC-V P
+specification contributors: https://github.com/riscv/riscv-p-spec
+They use CC BY 4.0; the license is in ../docs/spec/LICENSE.
+
+GCC, Binutils, glibc, QEMU and Linux UAPI headers retain their own copyrights,
+licenses and exceptions.  License texts in the component subdirectories are
+copies for reference; full per-file notices remain in the component sources.
+The MIT License does not apply to those third-party materials.

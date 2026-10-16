@@ -1,0 +1,25 @@
+# Local tool installations and source checkouts.
+/toolchain/
+/qemu/
+/sources/
+
+# Generated outputs and historical local records.
+/build/
+/dist/
+/archives/
+/validation-output/
+/toolchain-logs/
+*.log
+*.tar
+*.tar.gz
+*.tar.xz
+SHA256SUMS
+*.sha256
+
+# Python and editor files.
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+.venv/
+.vscode/
+.idea/

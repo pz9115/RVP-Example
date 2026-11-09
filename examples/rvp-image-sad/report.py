@@ -40,6 +40,7 @@ def verify_images(directory):
 
 def timings(path):
     groups = {}
+    expected_by_size = {}
     for row in csv.DictReader(path.open()):
         key = tuple(row[k] for k in ("environment", "kernel", "width", "height",
                                     "a_stride", "b_stride", "a_offset", "b_offset"))
@@ -47,6 +48,11 @@ def timings(path):
         iterations = int(row["iterations"])
         elapsed = int(row["elapsed_ns"])
         assert iterations > 0 and elapsed > 0
+        per_call, remainder = divmod(int(row["checksum"]), iterations)
+        assert remainder == 0, "Invalid accumulated benchmark checksum"
+        size = (int(row["width"]), int(row["height"]))
+        assert expected_by_size.setdefault(size, per_call) == per_call, \
+            "Benchmark layouts and kernels must use identical logical pixels"
         group = groups.setdefault(key, {"samples": set(), "times": []})
         assert row["sample"] not in group["samples"]
         group["samples"].add(row["sample"])
@@ -67,6 +73,25 @@ def timings(path):
     return result
 
 
+def stack_usage(path, name):
+    """Return compiler-reported static frames, not a whole-program stack bound."""
+    frames = []
+    for line in path.read_text().splitlines():
+        location, size, kind = line.split("\t")
+        function = location.rsplit(":", 1)[-1]
+        if function == name or function.startswith(name + "."):
+            assert kind == "static", (function, kind)
+            frames.append({"function": function, "bytes": int(size)})
+    assert frames, f"Missing stack usage for {name}"
+    return {"max_static_frame_bytes": max(frame["bytes"] for frame in frames),
+            "functions": frames}
+
+
+def opcodes(disassembly):
+    return re.findall(r"^\s*[0-9a-f]+:\s+[0-9a-f]+\s+(\S+)",
+                      disassembly, re.M)
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("output", type=Path)
@@ -74,36 +99,65 @@ def main():
     args = parser.parse_args()
     out = args.output.resolve()
     versions = json.loads(args.versions.read_text())
+    config = json.loads((out / "build-config.json").read_text())
+    xlen = config["xlen"]
+    assert xlen in (32, 64)
+    assert config["alignment"] in ("hardware", "strict")
     tests = json.loads((out / "tests.json").read_text())
     demo = json.loads((out / "demo.json").read_text())
-    assert tests["failures"] == 0 and tests["cases"] > 80000
+    assert tests["failures"] == 0 and tests["cases"] == 82640
     assert demo["all_costs_match"] and demo["sad"] == 0
-    assert re.search(r"^#define __riscv_p 6000$",
-                     (out / "macros.txt").read_text(), re.M)
+    macros = (out / "macros.txt").read_text()
+    assert re.search(r"^#define __riscv_p 6000$", macros, re.M)
+    assert re.search(rf"^#define __riscv_xlen {xlen}$", macros, re.M)
     assert "_p0p6" in (out / "attributes.txt").read_text()
+    kernel_attributes = (out / "kernel-attributes.txt").read_text()
+    assert f"rv{xlen}i" in kernel_attributes and "_p0p6" in kernel_attributes
+    if xlen == 32:
+        assert config["abi"] == config["runtime_abi"] == "ilp32"
+        assert re.search(r"^#define __riscv_float_abi_soft 1$", macros, re.M)
+        assert not re.search(r"_(?:f|d|v)\d+p\d+", kernel_attributes)
+        assert not re.search(r"_(?:f|d|v)\d+p\d+",
+                             (out / "attributes.txt").read_text())
     p_asm = (out / "sad-p.dis").read_text()
     scalar_asm = (out / "sad-scalar.dis").read_text()
     assert "pabdsumu.b" in p_asm or "pabdsumau.b" in p_asm
-    assert re.search(r"\sld\s", p_asm), "Missing aligned packed loads"
+    wide_load = "lw" if xlen == 32 else "ld"
+    assert wide_load in opcodes(p_asm), "Missing native-width packed loads"
     assert not re.search(r"\s(?:pabdsumu|pabdsumau)\.b\s", scalar_asm)
-    assert not re.search(r"\svset(?:i?vli|vl)\s", p_asm + scalar_asm)
+    instructions = opcodes(p_asm + scalar_asm)
+    assert not any(op.startswith("v") for op in instructions), "Unexpected RVV instruction"
+    assert not any(op.startswith("f") and not op.startswith("fence")
+                   for op in instructions), "Unexpected floating-point instruction"
 
     code_bytes = {}
+    frames = {}
     for kernel in ("scalar", "p"):
         sizes = (out / f"sad-{kernel}.size").read_text()
         code_bytes[kernel] = sum(int(size) for size in re.findall(
             r"^\.text\S*\s+(\d+)\s+", sizes, re.M))
+        assert code_bytes[kernel] > 0
+        frames[kernel] = stack_usage(out / f"sad-{kernel}.su", "sad_" + kernel)
+    counts = json.loads((out / "instruction-counts.json").read_text())
+    assert counts["xlen"] == xlen and counts["alignment_policy"] == config["alignment"]
     report = {
-        "purpose": "RV64 P image block matching / SAD demonstration",
+        "purpose": f"RV{xlen} P image block matching / SAD demonstration",
+        "build_configuration": config,
         "spec_state": "P v0.6 draft, not ratified",
         "tested_versions": versions["versions"],
         "tests": tests, "demo": demo,
+        "compiler_regression": (json.loads((out / "compiler-regression.json").read_text())
+                                if xlen == 32 else None),
         "independent_image_check": verify_images(out / "images"),
         "code_generation": {"packed_sad_present": True,
-                            "aligned_ld_present": True,
-                            "no_rvv_vset": True, "text_bytes": code_bytes},
-        "instruction_counts": json.loads((out / "instruction-counts.json").read_text()),
-        "measurement_scope": "Warm-cache SAD kernels only; not end-to-end video",
+                            "native_load": wide_load,
+                            "no_rvv": True, "no_floating_point": True,
+                            "text_bytes": code_bytes, "stack_usage": frames,
+                            "stack_scope": "Compiler-reported kernel frames, "
+                                           "not whole-program stack usage"},
+        "instruction_counts": counts,
+        "measurement_scope": "SAD kernels only; warmed-up emulator timings, "
+                             "not end-to-end video or a hardware cache model",
         "qemu_timings_are_hardware_performance": False,
         "hardware_speedup": None,
         "timing_note": "Emulator host elapsed times are diagnostic only. "
@@ -118,6 +172,8 @@ def main():
     (out / "result.json").write_text(json.dumps(report, indent=2) + "\n")
     print(f"PASS: {tests['cases']} C cases; 289 independent Python image costs")
     print(f"Code bytes (not a speedup): {code_bytes}")
+    print("Kernel stack frames:",
+          {kernel: frame["max_static_frame_bytes"] for kernel, frame in frames.items()})
     print("Hardware performance: not measured; QEMU times are diagnostic only")
 
 

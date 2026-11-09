@@ -1,4 +1,4 @@
-/* RV64 P image-processing example: sum of absolute differences (SAD).  */
+/* RV32/RV64 P image example: sum of absolute differences (SAD).  */
 
 #ifndef RVP_IMAGE_SAD_H
 #define RVP_IMAGE_SAD_H
@@ -8,7 +8,9 @@
 
 /* Rows contain WIDTH bytes and have independent strides, at least WIDTH.
    Inputs may be unaligned.  Empty images are not accessed.  The caller must
-   supply valid image buffers and ensure 255 * WIDTH * HEIGHT fits uint64_t.  */
+   supply valid image buffers and ensure 255 * WIDTH * HEIGHT fits uint64_t.
+   A SAD_HW_UNALIGNED build requires hardware-supported unaligned loads;
+   the default build also supports strict-alignment implementations.  */
 typedef uint64_t (*sad_fn) (const uint8_t *, size_t, const uint8_t *, size_t,
                           size_t, size_t);
 

@@ -33,12 +33,33 @@ allocate (size_t size)
 }
 
 static uint8_t
+random_byte_from (uint32_t *state)
+{
+  *state ^= *state << 13;
+  *state ^= *state >> 17;
+  *state ^= *state << 5;
+  return *state >> 24;
+}
+
+static uint8_t
 random_byte (void)
 {
-  random_state ^= random_state << 13;
-  random_state ^= random_state >> 17;
-  random_state ^= random_state << 5;
-  return random_state >> 24;
+  return random_byte_from (&random_state);
+}
+
+/* Use the same logical pixels for every alignment and architecture.
+   Padding, pointer offsets and earlier random tests do not affect the data.  */
+static void
+fill_workload (uint8_t *a, size_t as, uint8_t *b, size_t bs,
+               size_t width, size_t height)
+{
+  uint32_t state = 0x12345678;
+  for (size_t y = 0; y < height; ++y)
+    for (size_t x = 0; x < width; ++x)
+      {
+        a[y * as + x] = random_byte_from (&state);
+        b[y * bs + x] = random_byte_from (&state);
+      }
 }
 
 static uint64_t
@@ -110,6 +131,23 @@ test_correctness (void)
                                         width, heights[h]);
             check (a + ao, as, b + bo, bs, width, heights[h], expected);
           }
+
+  /* Prove that alignment comparisons use identical pixels, not different
+     slices of a random buffer.  Check each input's offset independently.  */
+  uint8_t reference_a[16 * 16];
+  uint8_t reference_b[16 * 16];
+  fill_workload (reference_a, 16, reference_b, 16, 16, 16);
+  uint64_t reference_sad = oracle (reference_a, 16, reference_b, 16, 16, 16);
+  for (size_t ao = 0; ao < 8; ++ao)
+    for (size_t bo = 0; bo < 8; ++bo)
+      {
+        fill_workload (a + ao, 24, b + bo, 32, 16, 16);
+        for (size_t y = 0; y < 16; ++y)
+          if (memcmp (a + ao + y * 24, reference_a + y * 16, 16) != 0
+              || memcmp (b + bo + y * 32, reference_b + y * 16, 16) != 0)
+            fail ("alignment workload pixels differ");
+        check (a + ao, 24, b + bo, 32, 16, 16, reference_sad);
+      }
 
   /* Place the last byte immediately before an inaccessible page.  A packed
      load past the tail faults even if its extra lanes are later masked.  */
@@ -274,12 +312,9 @@ benchmark (const char *environment)
         size_t bs = width + 16;
         uint8_t *a = allocate (as * height + 8);
         uint8_t *b = allocate (bs * height + 8);
-        for (size_t i = 0; i < as * height + 8; ++i)
-          a[i] = random_byte ();
-        for (size_t i = 0; i < bs * height + 8; ++i)
-          b[i] = random_byte ();
-        const uint8_t *ar = a + unaligned;
-        const uint8_t *br = b + 3 * unaligned;
+        uint8_t *ar = a + unaligned;
+        uint8_t *br = b + 3 * unaligned;
+        fill_workload (ar, as, br, bs, width, height);
         uint64_t expected = oracle (ar, as, br, bs, width, height);
         check (ar, as, br, bs, width, height, expected);
         uint64_t checksum;
@@ -319,10 +354,7 @@ trace_case (const char *kernel, const char *layout)
   uint8_t a[24 * 16 + 8] __attribute__ ((aligned (8)));
   uint8_t b[32 * 16 + 8] __attribute__ ((aligned (8)));
   size_t offset = strcmp (layout, "unaligned") == 0;
-  for (size_t i = 0; i < sizeof a; ++i)
-    a[i] = random_byte ();
-  for (size_t i = 0; i < sizeof b; ++i)
-    b[i] = random_byte ();
+  fill_workload (a + offset, 24, b + 3 * offset, 32, 16, 16);
   uint64_t expected = oracle (a + offset, 24, b + 3 * offset, 32, 16, 16);
   sad_fn fn = strcmp (kernel, "scalar") == 0 ? sad_scalar : sad_p;
   uint64_t actual = fn (a + offset, 24, b + 3 * offset, 32, 16, 16);

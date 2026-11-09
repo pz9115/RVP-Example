@@ -4,6 +4,7 @@
 import base64
 import csv
 import importlib.util
+import json
 from pathlib import Path
 import struct
 import sys
@@ -24,7 +25,11 @@ def grayscale_png(width, height, pixels):
 
 
 root = Path(__file__).resolve().parents[1]
-out = Path(sys.argv[1]).resolve() if len(sys.argv) > 1 else root / "build/present"
+out = (Path(sys.argv[1]).resolve() if len(sys.argv) > 1
+       else root / "build/rv32-hardware")
+config = json.loads((out / "build-config.json").read_text())
+xlen = config["xlen"]
+assert xlen in (32, 64)
 spec = importlib.util.spec_from_file_location(
     "sad_report", root / "examples/rvp-image-sad/report.py")
 report = importlib.util.module_from_spec(spec)
@@ -33,12 +38,12 @@ report.verify_images(out / "images")
 svg = ['<svg xmlns="http://www.w3.org/2000/svg" '
        'xmlns:xlink="http://www.w3.org/1999/xlink" width="720" height="270" '
        'viewBox="0 0 720 270" role="img" aria-labelledby="title desc">',
-       '<title id="title">RV64 P image block matching</title>',
+       f'<title id="title">RV{xlen} P image block matching</title>',
        '<desc id="desc">Reference and shifted grayscale images. All 289 '
        'scalar and P search costs agree. Best offset is 5, minus 3, SAD zero.</desc>',
        '<rect width="720" height="270" fill="#fff"/>',
        '<g font-family="sans-serif" fill="#172b4d">',
-       '<text x="20" y="27" font-size="18">RV64 P: grayscale block matching</text>']
+       f'<text x="20" y="27" font-size="18">RV{xlen} P: grayscale block matching</text>']
 for index, (name, label) in enumerate((('reference', 'Reference block'),
                                       ('shifted', 'Matched block: (+5, -3)'))):
     width, height, pixels = report.read_pgm(out / "images" / (name + ".pgm"))

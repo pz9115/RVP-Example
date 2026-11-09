@@ -4,7 +4,10 @@ Revalidated on 2026-11-09 with the included x86_64 Linux binaries.
 Host: Ubuntu 24.04.2, glibc 2.39, WSL2. Components: GCC 16.1.0,
 Binutils 2.47, glibc 2.43 and QEMU 11.1.50, with P draft 0.6 support.
 
-## Matrix and correctness
+Measurements cover executed guest instructions, kernel text bytes and static
+frames. QEMU elapsed times are diagnostic; hardware timing has not been measured.
+
+## Image SAD matrix and correctness
 
 All **12 configurations** pass: RV32/RV64 × hardware/strict alignment ×
 O2/O3/Os. Each configuration passes:
@@ -44,10 +47,6 @@ Both kernels use `-mtune=size`, without LTO or automatic vectorization.
 
 Each P call executes 64 packed SAD instructions on RV32 or 32 on RV64.
 Hardware-mode traces contain native word loads and no byte-load fallback.
-Equal aligned/unaligned counts do not imply equal hardware memory latency.
-
-**These are instruction counts, not cycles or speedup measurements.**
-Emulator elapsed times remain diagnostic only.
 
 ## Kernel footprint
 
@@ -64,8 +63,7 @@ O2 and O3 give the same sizes and frames in this example.
 | RV64 | Strict | O2 / O3 | 98 / 470 | 16 / 96 |
 | RV64 | Strict | Os | 92 / 354 | 16 / 0 |
 
-Frames come from GCC `-fstack-usage`. These measurements exclude the harness
-and runtime and are not whole-program maximum stack usage.
+Frames come from GCC `-fstack-usage` for the kernel functions.
 
 ## Alignment checks
 
@@ -77,9 +75,6 @@ run checks **1,602 cases**: widths 0–24, all input offsets 0–7 and empty ima
 - Strict P passes with support disabled.
 - Hardware-mode P raises the expected SIGBUS with support disabled.
 
-This checks the kernel's contract, not the full glibc program on a
-strict-trapping CPU. It does not establish hardware timing or atomicity.
-
 ## Tools and tutorial
 
 - A fresh RV32 GCC/Binutils/libgcc/glibc toolchain and both QEMU user emulators
@@ -88,7 +83,6 @@ strict-trapping CPU. It does not establish hardware timing or atomicity.
   with compiler helpers, target headers and target libraries resolving locally.
 - The notebook's code cells pass headlessly for both architectures and both
   alignment policies; its saved image preview is from RV32 hardware mode.
-  The interactive Jupyter UI is not validated.
 - Invalid configuration, failed-build and timeout controls check that failed
   reruns do not retain an earlier success report.
 - Eight runner tests and nine notebook-state tests pass. Notebook displays
@@ -102,11 +96,71 @@ Reproduce with `XLEN=32 bash scripts/acceptance.sh` and `XLEN=64 bash
 scripts/acceptance.sh`. Reports and traces are generated in
 `build/acceptance-rv<XLEN>/<policy>/<optimization>/`.
 
+## Q15 dot product and FIR
+
+All **12 DSP configurations** pass: RV32/RV64 × hardware/strict × O2/O3/Os.
+Every configuration passes **110,597 C checks**, an independent Python
+reference for the dot/FIR demo and all repeated trace fixtures, P-disabled
+controls, and a libc-free alignment probe using the measured kernel objects.
+
+The checks cover full-range Q15 inputs, exact signed 64-bit sums, rounding
+ties and clamp boundaries, non-symmetric coefficients, nonzero history,
+streaming chunks, input/output canaries and guard-page tails. Each successful
+alignment-probe run makes 1,154 kernel calls. Strict P passes with misaligned
+loads disabled; hardware-mode P raises the expected SIGBUS. Scalar runs with
+P disabled, while each P workload raises the expected SIGILL.
+
+Twenty host-only report/oracle tests pass. A separate scalar-only host build
+with `-fsanitize=undefined -fno-sanitize-recover=all` passes **56,324 checks**.
+The DSP notebook also passes headlessly on RV32/RV64 with both alignment
+policies. Twelve notebook-state tests cover configuration changes and failed reruns.
+All three DSP slide pages pass visual review and PPTX structure checks.
+
+### DSP guest instructions
+
+One dot call has 1,024 terms. One FIR call produces 64 outputs with 32 taps,
+including final rounding and clamping. Data preparation and the harness are
+outside the measured symbols; out-of-line calls are rejected. Two traces
+must match, and every logical input is checked across layouts and kernels.
+
+Each table entry is **scalar / P base-aligned / P base-offset**. The offset is
+one 16-bit sample. For FIR, even base-aligned buffers have misaligned sliding
+windows.
+
+| Target | Policy | Optimization | Dot instructions | FIR instructions |
+| --- | --- | --- | ---: | ---: |
+| RV32 | Hardware | O2 | 12,295 / 3,597 / 3,597 | 27,985 / 8,599 / 8,599 |
+| RV32 | Hardware | O3 | 12,295 / 3,597 / 3,597 | 27,985 / 8,536 / 8,536 |
+| RV32 | Hardware | Os | 14,344 / 4,618 / 4,618 | 28,393 / 11,005 / 11,005 |
+| RV32 | Strict | O2 | 12,295 / 3,600 / 12,822 | 27,985 / 18,019 / 27,235 |
+| RV32 | Strict | O3 | 12,295 / 3,600 / 12,822 | 27,985 / 17,956 / 27,172 |
+| RV32 | Strict | Os | 14,344 / 4,620 / 13,326 | 28,393 / 19,837 / 28,605 |
+| RV64 | Hardware | O2 | 7,173 / 1,804 / 1,804 | 17,259 / 4,688 / 4,688 |
+| RV64 | Hardware | O3 | 7,173 / 1,804 / 1,804 | 17,259 / 4,625 / 4,625 |
+| RV64 | Hardware | Os | 9,222 / 2,313 / 2,313 | 17,509 / 5,864 / 5,864 |
+| RV64 | Strict | O2 | 7,173 / 1,807 / 12,567 | 17,259 / 21,024 / 26,400 |
+| RV64 | Strict | O3 | 7,173 / 1,807 / 12,567 | 17,259 / 20,961 / 26,337 |
+| RV64 | Strict | Os | 9,222 / 2,315 / 12,813 | 17,509 / 21,769 / 27,048 |
+
+Strict split-load fallback can cost more instructions than the scalar kernel.
+Hardware-supported misaligned loads are the primary example configuration.
+
+### DSP kernel footprint
+
+Hardware mode, O3; scalar / P:
+
+| Target | Kernel | Text bytes | Static frame bytes |
+| --- | --- | ---: | ---: |
+| RV32 | Dot | 58 / 96 | 0 / 0 |
+| RV32 | FIR | 266 / 226 | 16 / 16 |
+| RV64 | Dot | 38 / 90 | 0 / 0 |
+| RV64 | FIR | 200 / 176 | 0 / 16 |
+
+Reproduce with `XLEN=32 bash
+scripts/acceptance-dsp.sh` and `XLEN=64 bash scripts/acceptance-dsp.sh`.
+Outputs are under `build/acceptance-dsp-rv<XLEN>/<policy>/<optimization>/`.
+
 ## Earlier RV64 measurements
 
-The October RV64 slides and chart use the earlier compiler tuning and input
-layout. Their numbers are historical, not the current matrix. The current
-tests use identical pixels across alignments; do not mix the two datasets.
-
-Scope: this static, single-threaded C example, not all P instructions, other
-host distributions, arbitrary applications or hardware performance.
+The October RV64 slides and chart retain their earlier compiler tuning and
+input layout. The tables above use identical pixels across alignments.

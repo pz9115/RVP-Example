@@ -3,9 +3,8 @@
 ## Target
 
 Provide the existing image block-matching example on RV32, while retaining
-RV64. Use P draft 0.6 and report correctness, executed guest instructions,
-kernel text size and static stack usage. QEMU is a functional emulator, not
-a hardware timing model.
+RV64. Add Q15 dot-product and FIR examples. Use P draft 0.6 and report
+correctness, executed guest instructions, kernel text size and static stack usage.
 
 The RV32 kernels target RV32IMC with Zba, Zbb and P, using ILP32. M includes
 Zmmul, which P requires. The Linux test harness and glibc also require A;
@@ -38,19 +37,17 @@ is required. RV64 retains its existing RV64GC / LP64D runtime.
 
 Hardware-unaligned is the primary demonstration configuration. Strict mode
 remains available for implementations without efficient misaligned accesses.
-The hardware assumption is specific to this example, not a P requirement.
 
 Use `-mtune=size` for both kernels and both alignment configurations. This
-selects GCC's size-oriented cost model, not a particular physical processor.
+selects GCC's size-oriented cost model.
 Together with `-mno-strict-align`, it permits direct word loads from the
-unaligned intrinsic API. Verify the generated assembly; the option alone is
-not proof of an unaligned-load fast path.
+unaligned intrinsic API. Verify the generated load instructions.
 
-## Acceptance boundary
+## Measurement
 
-Do not claim hardware speedup, universal P coverage or upstream release
-support. Keep historical RV64 measurements labeled as historical. Build the
-demo toolchain separately from ongoing compiler optimization experiments.
+Report QEMU guest-instruction counts, kernel text size and static frames.
+Hardware timing needs a compatible board or cycle model. Build the demo
+toolchain separately from ongoing compiler optimization experiments.
 
 ## Status
 
@@ -59,7 +56,13 @@ demo toolchain separately from ongoing compiler optimization experiments.
 - RV32 carry-loss compiler backport and regression: complete.
 - All 12 architecture/alignment/optimization configurations: pass.
 - Notebook, image preview and English documentation: updated.
-- Hardware timing and a hardware-specific tuning model: not yet available.
+- Six-slide RV32 image deck, PDF and editable chart: complete.
+- Q15 dot/FIR kernels, independent references and alignment probes: complete.
+- Q15 DSP: all 12 configurations pass, 110,597 C checks each; scalar-only
+  host UBSan checks pass (56,324 checks).
+- DSP notebook: four target/alignment configurations pass headlessly.
+- DSP presentation material: three-page PPTX/PDF, editable FIR signal and
+  instruction charts complete; all nine image/DSP slides visually checked.
 
 ## Delivery work: November 2026
 
@@ -70,8 +73,7 @@ demo toolchain separately from ongoing compiler optimization experiments.
 - Repeat the complete image-demo matrix with the included tools.
 - Refresh the English PPT/PDF with RV32-first code and editable instruction
   count charts. Keep code size and stack tradeoffs visible.
-- Commit validated changes locally in coherent groups. Do not push remotely
-  as part of validation.
+- Commit validated changes locally in coherent groups.
 
 ## Additional DSP examples
 
@@ -92,5 +94,4 @@ handling clearly. Test signal and coefficient edge cases independently.
 For each example, validate with the included RV32/RV64 tools, retain generated
 assembly, and report guest instructions and kernel footprint. Update the
 English quick start and presentation material, and make separate local
-commits. Hardware cycles, energy and speedup remain outside the claims until
-a compatible board or cycle model is available.
+commits.

@@ -3,8 +3,7 @@
 Prebuilt tools are included for x86_64 Linux. Building is optional; the normal
 runner uses the binaries in `toolchain-rv32/`, `toolchain/` and `qemu/`.
 
-Unmodified release sources with the same version numbers are not sufficient:
-GCC, Binutils and QEMU must include the P draft 0.6 implementation.
+Use GCC, Binutils and QEMU sources with the P draft 0.6 implementation.
 
 ## Sources
 
@@ -70,7 +69,7 @@ OUT="$PWD/build/custom-rv32-O2" XLEN=32 OPTFLAGS=-O2 bash scripts/present.sh
 
 Use `ALIGNMENT=hardware|strict`, not a standalone `ALIGNFLAGS` override:
 the compiler option and the C kernel's load path must agree. Both kernels use
-the same `-mtune=size` cost model. This does not identify or model a real core.
+the same `-mtune=size` cost model.
 
 Unset external compiler search variables such as `GCC_EXEC_PREFIX`,
 `COMPILER_PATH`, `LIBRARY_PATH` and `CPATH`. Use paths without whitespace.
@@ -81,8 +80,7 @@ XLEN=64 bash scripts/acceptance.sh
 ```
 
 Each command covers O2/O3/Os and both alignment policies, with negative
-controls and a libc-free alignment test. Programs are static and
-single-threaded; arbitrary dynamic or threaded applications are not validated.
+controls and a libc-free alignment test. Programs are static and single-threaded.
 
 ## Notebook images
 
@@ -109,3 +107,16 @@ The default generator uses Python, Matplotlib and Pillow, and reuses the
 earlier deck's master/theme. Text and bars in the new PPTX remain editable.
 The PDF renders the same layout; it is not a PowerPoint/Impress round-trip.
 Use `--check-only` to validate input reports without producing slides.
+
+The Q15 DSP deck uses the two hardware-mode O3 results:
+
+```bash
+XLEN=32 OUT_BASE="$PWD/build/dsp-matrix/rv32" bash scripts/acceptance-dsp.sh
+XLEN=64 OUT_BASE="$PWD/build/dsp-matrix/rv64" bash scripts/acceptance-dsp.sh
+/usr/bin/python3 scripts/build-dsp-slides.py \
+  --rv32 build/dsp-matrix/rv32/hardware/O3 \
+  --rv64 build/dsp-matrix/rv64/hardware/O3 --output-dir build/dsp-slides
+```
+
+This produces a three-page PPTX/PDF, an SVG signal/count chart, and the source
+measurements. The FIR signal and bars are editable PowerPoint shapes.

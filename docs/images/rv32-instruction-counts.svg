@@ -30,6 +30,6 @@
 <rect x="320" y="348" width="332.180" height="30" fill="#ef6438"/>
 <text x="664.1800000000001" y="371" font-size="17" fill="#142b49" text-anchor="start" font-weight="700">1,954</text>
 <text x="575" y="454" font-size="14" fill="#718092" text-anchor="middle" font-weight="400">Executed guest instructions</text>
-<text x="42" y="489" font-size="10" fill="#718092" text-anchor="start" font-weight="400">Same logical pixels and tuning; no LTO or auto-vectorization. Counts are not hardware timing.</text>
-<text x="42" y="514" font-size="10" fill="#718092" text-anchor="start" font-weight="400">Equal aligned/unaligned counts do not imply equal hardware memory latency. P 0.6 is a draft.</text>
+<text x="42" y="489" font-size="10" fill="#718092" text-anchor="start" font-weight="400">Same logical pixels and -mtune=size; no LTO or auto-vectorization. P 0.6 draft.</text>
+<text x="42" y="514" font-size="10" fill="#718092" text-anchor="start" font-weight="400">QEMU guest instructions, -O3; hardware mode assumes misaligned word loads. Hardware timing not measured.</text>
 </g></svg>

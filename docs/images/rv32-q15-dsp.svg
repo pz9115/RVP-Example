@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="830" viewBox="0 0 1100 830">
+<rect width="100%" height="100%" fill="#f5f7fb"/>
+<text x="40" y="45" font-family="sans-serif" font-size="28" fill="#18334d">RV32 P: Q15 dot product and FIR</text>
+<text x="40" y="77" font-family="sans-serif" font-size="17" fill="#18334d">hardware alignment; -O3; exact 64-bit accumulation</text>
+<text x="55" y="135" font-family="sans-serif" font-size="22" fill="#18334d">Dot: 1,024 terms</text>
+<text x="55" y="189" font-family="sans-serif" font-size="17" fill="#18334d">Scalar</text>
+<rect x="120" y="165" width="315.0" height="34" fill="#486d91"/>
+<text x="443.0" y="189" font-family="sans-serif" font-size="17" fill="#18334d">12,295</text>
+<text x="55" y="249" font-family="sans-serif" font-size="17" fill="#18334d">P</text>
+<rect x="120" y="225" width="92.2" height="34" fill="#ed8335"/>
+<text x="220.15575437169582" y="249" font-family="sans-serif" font-size="17" fill="#18334d">3,597</text>
+<text x="585" y="135" font-family="sans-serif" font-size="22" fill="#18334d">FIR: 32 taps, 64 outputs</text>
+<text x="585" y="189" font-family="sans-serif" font-size="17" fill="#18334d">Scalar</text>
+<rect x="650" y="165" width="315.0" height="34" fill="#486d91"/>
+<text x="973.0" y="189" font-family="sans-serif" font-size="17" fill="#18334d">27,985</text>
+<text x="585" y="249" font-family="sans-serif" font-size="17" fill="#18334d">P</text>
+<rect x="650" y="225" width="96.1" height="34" fill="#ed8335"/>
+<text x="754.0814722172593" y="249" font-family="sans-serif" font-size="17" fill="#18334d">8,536</text>
+<text x="40" y="325" font-family="sans-serif" font-size="17" fill="#18334d">Executed guest instructions, including kernel entry and return.</text>
+<text x="40" y="375" font-family="sans-serif" font-size="23" fill="#18334d">FIR signal: input and verified Q15 output</text>
+<path d="M80,700.0 L1045,700.0" stroke="#d5dde6"/>
+<text x="8" y="705.0" font-family="sans-serif" font-size="13" fill="#18334d">-32768</text>
+<path d="M80,629.9989318684673 L1045,629.9989318684673" stroke="#d5dde6"/>
+<text x="8" y="634.9989318684673" font-family="sans-serif" font-size="13" fill="#18334d">-16384</text>
+<path d="M80,559.9978637369345 L1045,559.9978637369345" stroke="#d5dde6"/>
+<text x="8" y="564.9978637369345" font-family="sans-serif" font-size="13" fill="#18334d">0</text>
+<path d="M80,489.9967956054017 L1045,489.9967956054017" stroke="#d5dde6"/>
+<text x="8" y="494.9967956054017" font-family="sans-serif" font-size="13" fill="#18334d">16384</text>
+<path d="M80,420.0 L1045,420.0" stroke="#d5dde6"/>
+<text x="8" y="425.0" font-family="sans-serif" font-size="13" fill="#18334d">32767</text>
+<polyline points="80.00,606.57 95.32,628.79 110.63,591.19 125.95,613.40 141.27,575.81 156.59,598.02 171.90,560.43 187.22,582.64 202.54,545.04 217.86,567.26 233.17,529.66 248.49,551.88 263.81,514.28 279.13,536.50 294.44,498.90 309.76,521.12 325.08,483.52 340.40,521.12 355.71,498.90 371.03,536.50 386.35,463.01 401.67,551.88 416.98,529.66 432.30,567.26 447.62,545.04 462.94,582.64 478.25,560.43 493.57,598.02 508.89,575.81 524.21,613.40 539.52,591.19 554.84,628.79 570.16,606.57 585.48,628.79 600.79,591.19 616.11,613.40 631.43,575.81 646.75,598.02 662.06,560.43 677.38,582.64 692.70,523.68 708.02,545.90 723.33,508.30 738.65,530.52 753.97,492.92 769.29,515.14 784.60,477.54 799.92,499.76 815.24,462.16 830.56,499.76 845.87,477.54 861.19,515.14 876.51,492.92 891.83,530.52 907.14,508.30 922.46,545.90 937.78,523.68 953.10,561.28 968.41,539.06 983.73,576.66 999.05,554.44 1014.37,592.04 1029.68,569.82 1045.00,607.42" fill="none" stroke="#a8b7c7" stroke-width="2.5"/>
+<polyline points="80.00,567.50 95.32,583.13 110.63,585.01 125.95,589.91 141.27,583.23 156.59,583.82 171.90,574.96 187.22,574.17 202.54,564.51 217.86,563.72 233.17,554.05 248.49,553.26 263.81,543.60 279.13,542.81 294.44,533.15 309.76,532.35 325.08,522.69 340.40,525.75 355.71,522.81 371.03,530.68 386.35,517.80 401.67,530.31 416.98,534.19 432.30,547.06 447.62,549.44 462.94,559.91 478.25,561.10 493.57,571.17 508.89,571.96 524.21,581.63 539.52,582.41 554.84,592.08 570.16,592.87 585.48,598.69 600.79,592.75 616.11,593.76 631.43,584.94 646.75,584.51 662.06,574.96 677.38,574.17 692.70,559.16 708.02,554.38 723.33,542.04 738.65,539.91 753.97,529.58 769.29,528.46 784.60,518.62 799.92,517.84 815.24,508.17 830.56,511.23 845.87,508.29 861.19,516.15 876.51,516.10 891.83,525.41 907.14,526.07 922.46,535.74 937.78,536.53 953.10,546.20 968.41,546.98 983.73,556.65 999.05,557.44 1014.37,567.10 1029.68,567.89 1045.00,577.56" fill="none" stroke="#ed8335" stroke-width="2.5"/>
+<text x="80" y="732" font-family="sans-serif" font-size="17" fill="#70869b">Input</text>
+<text x="175" y="732" font-family="sans-serif" font-size="17" fill="#c56824">FIR output</text>
+<text x="850" y="732" font-family="sans-serif" font-size="15" fill="#18334d">Sample index</text>
+<text x="40" y="780" font-family="sans-serif" font-size="17" fill="#18334d">Nearest rounding, ties away from zero; saturation after the complete dot product.</text>
+<text x="40" y="812" font-family="sans-serif" font-size="12" fill="#18334d">Measurement: QEMU guest instructions. Hardware timing not measured.</text>
+</svg>

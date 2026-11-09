@@ -317,7 +317,7 @@ class Deck:
         self.text(page, 42, 105, 876, 30, subtitle, 17, GRAY)
         self.rectangle(page, 42, 506, 876, 1, LINE)
         self.text(page, 42, 515, 820, 16,
-                  "RVP-Example | P 0.6 draft | QEMU instruction counts are not hardware timing", 10, GRAY)
+                  "RVP-Example | P 0.6 draft", 10, GRAY)
         self.text(page, 878, 515, 40, 16, str(self.index + 1), 10, GRAY, align="RIGHT")
         self.index += 1
         return page
@@ -336,12 +336,14 @@ class Deck:
 class NativeDeck:
     """Shared point-based layout for native OOXML shapes and a vector PDF."""
 
-    def __init__(self):
+    def __init__(self, title="Image block matching with RV32 P",
+                 description="Current validated RV32/RV64 matrix. P 0.6 draft. Guest instructions are not hardware timing."):
         from matplotlib.font_manager import FontProperties
         from matplotlib.textpath import TextToPath
         self.font_properties = FontProperties
         self.measure = TextToPath()
         self.pages = []
+        self.title, self.description = title, description
 
     def rectangle(self, page, x, y, width, height, color):
         page.append(dict(kind="rectangle", x=x, y=y, width=width, height=height, color=color))
@@ -378,6 +380,14 @@ class NativeDeck:
     def picture(self, page, path, x, y, width, height):
         page.append(dict(kind="picture", x=x, y=y, width=width, height=height, path=path))
 
+    def polyline(self, page, points, color, thickness=1):
+        require(len(points) >= 2, "A signal line needs at least two points")
+        xs, ys = zip(*points)
+        page.append(dict(kind="polyline", x=min(xs), y=min(ys),
+                         width=max(max(xs) - min(xs), 0.01),
+                         height=max(max(ys) - min(ys), 0.01),
+                         points=points, color=color, thickness=thickness))
+
     def page(self, title, subtitle):
         page = []
         self.pages.append(page)
@@ -387,7 +397,7 @@ class NativeDeck:
         self.text(page, 42, 105, 876, 30, subtitle, 17, GRAY)
         self.rectangle(page, 42, 506, 876, 1, LINE)
         self.text(page, 42, 515, 820, 16,
-                  "RVP-Example | P 0.6 draft | QEMU instruction counts are not hardware timing", 10, GRAY)
+                  "RVP-Example | P 0.6 draft", 10, GRAY)
         self.text(page, 878, 515, 40, 16, str(len(self.pages)), 10, GRAY, align="RIGHT")
         return page
 
@@ -419,12 +429,30 @@ class NativeDeck:
             transform = child(properties, "a:xfrm")
             child(transform, "a:off", x=round(item["x"] * 12700), y=round(item["y"] * 12700))
             child(transform, "a:ext", cx=round(item["width"] * 12700), cy=round(item["height"] * 12700))
-            child(child(properties, "a:prstGeom", prst="rect"), "a:avLst")
+            if item["kind"] == "polyline":
+                geometry = child(properties, "a:custGeom")
+                for name in ("avLst", "gdLst", "ahLst", "cxnLst"):
+                    child(geometry, "a:" + name)
+                child(geometry, "a:rect", l=0, t=0, r="r", b="b")
+                path = child(child(geometry, "a:pathLst"), "a:path",
+                             w=round(item["width"] * 12700), h=round(item["height"] * 12700),
+                             fill="none", stroke=1)
+                for index, (x, y) in enumerate(item["points"]):
+                    child(child(path, "a:moveTo" if index == 0 else "a:lnTo"), "a:pt",
+                          x=round((x - item["x"]) * 12700), y=round((y - item["y"]) * 12700))
+            else:
+                child(child(properties, "a:prstGeom", prst="rect"), "a:avLst")
             if item["kind"] == "rectangle":
                 child(child(properties, "a:solidFill"), "a:srgbClr", val=f"{item['color']:06X}")
             elif not picture:
                 child(properties, "a:noFill")
-            child(child(properties, "a:ln"), "a:noFill")
+            if item["kind"] == "polyline":
+                line = child(properties, "a:ln", w=round(item["thickness"] * 12700), cap="rnd")
+                child(child(line, "a:solidFill"), "a:srgbClr", val=f"{item['color']:06X}")
+                child(line, "a:prstDash", val="solid")
+                child(line, "a:round")
+            else:
+                child(child(properties, "a:ln"), "a:noFill")
             if item["kind"] == "text":
                 body = child(shape, "p:txBody")
                 child(child(body, "a:bodyPr", wrap="none", lIns=0, rIns=0, tIns=0, bIns=0, anchor="t"),
@@ -448,13 +476,15 @@ class NativeDeck:
 
     def save_pptx(self, path):
         # Reuse only the template's package/master/theme infrastructure, never
-        # its slides, notes or measurements. The sole bitmap is replaced too.
+        # its slides, notes or measurements. A deck may supply one bitmap or none.
+        images = {item["path"] for page in self.pages for item in page if item["kind"] == "picture"}
+        require(len(images) <= 1, "This focused slide renderer supports one shared bitmap per deck")
         with ZipFile(TEMPLATE) as source:
             parts = {name: source.read(name) for name in source.namelist()
-                     if not name.startswith(("ppt/slides/", "ppt/notesSlides/"))}
+                     if not name.startswith(("ppt/slides/", "ppt/notesSlides/", "ppt/media/"))}
         content = ET.fromstring(parts["[Content_Types].xml"])
         for item in list(content):
-            if item.get("PartName", "").startswith(("/ppt/slides/", "/ppt/notesSlides/")):
+            if item.get("PartName", "").startswith(("/ppt/slides/", "/ppt/notesSlides/", "/ppt/media/")):
                 content.remove(item)
         presentation = ET.fromstring(parts["ppt/presentation.xml"])
         identifiers = presentation.find(qualified("p:sldIdLst"))
@@ -482,20 +512,25 @@ class NativeDeck:
                 child(rels, "rel:Relationship", Id="rvpImage", Type=NS["r"] + "/image",
                       Target="../media/image1.png")
             parts[f"ppt/slides/_rels/slide{index}.xml.rels"] = xml_bytes(rels)
-        parts["ppt/media/image1.png"] = IMAGE.read_bytes()
+        if images:
+            parts["ppt/media/image1.png"] = next(iter(images)).read_bytes()
         parts["[Content_Types].xml"] = xml_bytes(content)
         parts["ppt/presentation.xml"] = xml_bytes(presentation)
         parts["ppt/_rels/presentation.xml.rels"] = xml_bytes(relationships)
         core = ET.fromstring(parts["docProps/core.xml"])
-        metadata = {"dc:title": "Image block matching with RV32 P",
-                    "dc:description": "Current validated RV32/RV64 matrix. P 0.6 draft. Guest instructions are not hardware timing.",
+        metadata = {"dc:title": self.title,
+                    "dc:subject": self.description,
+                    "dc:description": self.description,
                     "dcterms:modified": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")}
         for name, value in metadata.items():
             core.find(qualified(name)).text = value
         parts["docProps/core.xml"] = xml_bytes(core)
         application = ET.fromstring(parts["docProps/app.xml"])
         application.find(qualified("ep:Application")).text = "RVP-Example editable OOXML generator"
-        child(application, "ep:Slides").text = str(len(self.pages))
+        slide_count = application.find(qualified("ep:Slides"))
+        if slide_count is None:
+            slide_count = child(application, "ep:Slides")
+        slide_count.text = str(len(self.pages))
         parts["docProps/app.xml"] = xml_bytes(application)
         with ZipFile(path, "w", ZIP_DEFLATED) as output:
             for name, payload in parts.items():
@@ -505,25 +540,31 @@ class NativeDeck:
     def save_pdf(self, path):
         from matplotlib.backends.backend_pdf import PdfPages
         from matplotlib.figure import Figure
+        from matplotlib.lines import Line2D
         from matplotlib.patches import Rectangle
         from PIL import Image
-        with PdfPages(path, metadata={"Title": "Image block matching with RV32 P",
+        with PdfPages(path, metadata={"Title": self.title,
                                       "Author": "RVP-Example",
-                                      "Subject": "Shared editable-slide layout; guest instructions are not hardware timing"}) as output:
+                                      "Subject": self.description}) as output:
             for page in self.pages:
                 figure = Figure(figsize=(WIDTH / 72, HEIGHT / 72), dpi=72)
-                for item in page:
+                for layer, item in enumerate(page, 1):
                     x, y, width, height = (item[key] for key in ("x", "y", "width", "height"))
                     if item["kind"] == "rectangle":
                         figure.patches.append(Rectangle((x / WIDTH, 1 - (y + height) / HEIGHT),
                             width / WIDTH, height / HEIGHT, transform=figure.transFigure,
-                            facecolor=f"#{item['color']:06x}", edgecolor="none", zorder=1))
+                            facecolor=f"#{item['color']:06x}", edgecolor="none", zorder=layer))
                     elif item["kind"] == "picture":
                         axes = figure.add_axes((x / WIDTH, 1 - (y + height) / HEIGHT,
-                                                width / WIDTH, height / HEIGHT), zorder=2)
+                                                width / WIDTH, height / HEIGHT), zorder=layer)
                         with Image.open(item["path"]) as bitmap:
                             axes.imshow(bitmap, aspect="auto", interpolation="nearest")
                         axes.set_axis_off()
+                    elif item["kind"] == "polyline":
+                        xs, ys = zip(*item["points"])
+                        figure.lines.append(Line2D([value / WIDTH for value in xs],
+                            [1 - value / HEIGHT for value in ys], transform=figure.transFigure,
+                            color=f"#{item['color']:06x}", linewidth=item["thickness"], zorder=layer))
                     else:
                         horizontal = {"LEFT": "left", "CENTER": "center", "RIGHT": "right"}[item["align"]]
                         anchor = x + (width if horizontal == "right" else width / 2 if horizontal == "center" else 0)
@@ -531,7 +572,7 @@ class NativeDeck:
                             figure.text(anchor / WIDTH, 1 - (y + index * item["size"] * 1.15) / HEIGHT, line,
                                         fontsize=item["size"], color=f"#{item['color']:06x}",
                                         fontfamily=item["font"], weight="bold" if item["bold"] else "normal",
-                                        ha=horizontal, va="top", parse_math=False, zorder=3)
+                                        ha=horizontal, va="top", parse_math=False, zorder=layer)
                 output.savefig(figure)
                 figure.clear()
 
@@ -556,7 +597,8 @@ def validate_pptx(path, slides):
     print(f"Validated PPTX ZIP, all XML and internal relationships; {slides} editable slides.")
 
 
-def export_native(matrix, staging):
+@contextmanager
+def native_rendering():
     with tempfile.TemporaryDirectory(prefix="rvp-slides-mpl-", dir="/tmp") as cache:
         previous = os.environ.get("MPLCONFIGDIR")
         os.environ["MPLCONFIGDIR"] = cache
@@ -564,15 +606,20 @@ def export_native(matrix, staging):
             import matplotlib
             matplotlib.use("pdf")
             with matplotlib.rc_context({"pdf.fonttype": 42}):
-                deck = NativeDeck()
-                build_deck(deck, matrix)
-                deck.save_pptx(staging / OUTPUTS[0])
-                deck.save_pdf(staging / OUTPUTS[1])
+                yield
         finally:
             if previous is None:
                 os.environ.pop("MPLCONFIGDIR", None)
             else:
                 os.environ["MPLCONFIGDIR"] = previous
+
+
+def export_native(matrix, staging):
+    with native_rendering():
+        deck = NativeDeck()
+        build_deck(deck, matrix)
+        deck.save_pptx(staging / OUTPUTS[0])
+        deck.save_pdf(staging / OUTPUTS[1])
 
 
 def build_deck(deck, matrix):
@@ -582,6 +629,10 @@ def build_deck(deck, matrix):
     page = deck.page("Image block matching, now on RV32 P",
                      "Add absolute pixel differences. The lowest SAD identifies the match.")
     deck.picture(page, IMAGE, 42, 148, 876, 328.5)
+    # Reuse the verified illustration, with a shorter presentation caption.
+    deck.rectangle(page, 42, 435, 876, 42, WHITE)
+    deck.text(page, 62, 449, 836, 24,
+              f"{hw.candidates}/{hw.candidates} image costs independently verified · best SAD = 0", 15)
 
     page = deck.page("Four pixels per packed operation",
                      "The image kernel is C. No inline assembly is required.")
@@ -605,22 +656,22 @@ def build_deck(deck, matrix):
     deck.text(page, 42, 450, 876, 38,
               "Full kernel: row strides, alignment handling and scalar tails. RV64 uses eight byte lanes.", 14)
 
-    page = deck.page("An integer-core demo, with clear assumptions",
-                     "P uses the integer registers; this kernel needs neither floating point nor RVV.")
+    page = deck.page("DSP support for a compact integer core",
+                     "Packed arithmetic in the integer registers, using the same C source structure.")
     deck.rectangle(page, 42, 151, 410, 257, PALE)
-    deck.text(page, 62, 169, 370, 25, "RV32 KERNEL", 16, ORANGE, bold=True)
+    deck.text(page, 62, 169, 370, 25, "RV32 TARGET", 16, ORANGE, bold=True)
     deck.text(page, 62, 214, 370, 39, "RV32IMC + Zba/Zbb + P", 24, bold=True)
     deck.text(page, 62, 267, 370, 38, "P draft 0.6 · ILP32 soft-float ABI", 16)
     deck.text(page, 62, 326, 365, 61,
-              "The Linux demo runtime also needs A.\nThe SAD kernel does not.", 16)
-    deck.text(page, 485, 166, 430, 27, "HARDWARE MODE", 17, ORANGE, bold=True)
+              "Linux demo runtime: RV32IMAC.\nRV64 counterpart: eight byte lanes.", 16)
+    deck.text(page, 485, 166, 430, 27, "HARDWARE LOAD PATH", 17, ORANGE, bold=True)
     deck.text(page, 485, 203, 430, 64,
-              "Direct word loads.\nRequires supported misaligned accesses.", 17)
-    deck.text(page, 485, 291, 430, 27, "STRICT MODE", 17, ORANGE, bold=True)
+              "Direct word loads for cores\nwith misaligned-access support.", 17)
+    deck.text(page, 485, 291, 430, 27, "CHECKED LOAD PATH", 17, ORANGE, bold=True)
     deck.text(page, 485, 328, 430, 66,
-              "Check alignment.\nUse byte loads and packing when needed.", 17)
+              "Alignment checks select word loads\nor byte loads plus packing.", 17)
     deck.text(page, 42, 440, 876, 45,
-              "Misaligned-load support is a target assumption, not a P requirement.", 19, bold=True)
+              "Choose the packed width and load policy that fit your core.", 19, bold=True)
 
     rows, ceiling, title = chart_data(matrix)
     page = deck.page(title, "One 16 × 16 kernel call, including return · -O3 · lower is better")
@@ -635,12 +686,11 @@ def build_deck(deck, matrix):
         deck.rectangle(page, 320, y, width, 30, color)
         deck.text(page, 332 + width, y + 3, 95, 26, f"{count:,}", 17, bold=True)
     deck.text(page, 320, 436, 510, 24, "Executed guest instructions", 14, GRAY, align="CENTER")
-    deck.text(page, 42, 472, 876, 29,
-              f"Identical logical pixels; SAD {hw.checksum:,}. Same -mtune=size; no LTO or auto-vectorization.\n"
-              "Equal aligned/unaligned counts do not imply equal hardware memory latency.", 10, GRAY)
+    deck.text(page, 42, 476, 876, 23,
+              f"Identical 16 × 16 pixels in both layouts; SAD = {hw.checksum:,}.", 14, GRAY)
 
-    page = deck.page("Instruction savings have a footprint",
-                     "RV32 hardware mode · kernel-only measurements · no application-size claim")
+    page = deck.page("Choose code size or instruction count",
+                     "RV32 hardware mode · kernel text and static frame sizes")
     columns = ((42, 209), (251, 167), (418, 167), (585, 167), (752, 166))
     headers = ("Metric", "Scalar · -O3", "P · -O3", "Scalar · -Os", "P · -Os")
     for (x, width), label in zip(columns, headers):
@@ -662,8 +712,6 @@ def build_deck(deck, matrix):
     deck.text(page, 42, 428, 876, 30,
               f"Strict P at -O3: {strict.text['p']:,} text bytes; "
               f"{strict.frames['p']:,}-byte static frame.", 16)
-    deck.text(page, 42, 476, 876, 22,
-              "GCC -fstack-usage reports static kernel frames, not maximum whole-program stack use.", 10, GRAY)
 
     page = deck.page("A demo you can reproduce",
                      "C kernels, included tools, independently checked image-search costs.")
@@ -679,8 +727,10 @@ def build_deck(deck, matrix):
     deck.text(page, 58, 369, 844, 26,
               "XLEN=32 ALIGNMENT=hardware bash scripts/present.sh", 17, WHITE, mono=True)
     deck.text(page, 42, 426, 876, 48,
-              "Hardware speedup, memory latency and energy need a compatible board or cycle model.", 18, bold=True)
-    deck.text(page, 42, 480, 876, 18, "github.com/pz9115/RVP-Example", 10, GRAY)
+              "Try image matching, dot product and FIR with the included tools.", 18, bold=True)
+    deck.text(page, 42, 459, 876, 18, "github.com/pz9115/RVP-Example", 12, GRAY)
+    deck.text(page, 42, 485, 876, 16,
+              "QEMU guest instructions, -O3/-Os, -mtune=size; hardware mode assumes misaligned word loads. Hardware timing not measured.", 10, GRAY)
 
 
 def property_value(uno, name, value):
@@ -797,8 +847,8 @@ def write_chart(path, matrix):
         svg.append(f'<rect x="320" y="{y}" width="{width:.3f}" height="30" fill="#{color:06x}"/>')
         label(332 + width, y + 23, f"{count:,}", 17, bold=True)
     label(575, 454, "Executed guest instructions", 14, GRAY, "middle")
-    label(42, 489, "Same logical pixels and tuning; no LTO or auto-vectorization. Counts are not hardware timing.", 10, GRAY)
-    label(42, 514, "Equal aligned/unaligned counts do not imply equal hardware memory latency. P 0.6 is a draft.", 10, GRAY)
+    label(42, 489, "Same logical pixels and -mtune=size; no LTO or auto-vectorization. P 0.6 draft.", 10, GRAY)
+    label(42, 514, "QEMU guest instructions, -O3; hardware mode assumes misaligned word loads. Hardware timing not measured.", 10, GRAY)
     svg.append("</g></svg>\n")
     path.write_text("\n".join(svg))
 

@@ -71,7 +71,7 @@ for row in rows:
 svg.append(f'<rect x="{best_x}" y="{best_y}" width="9" height="9" '
            'fill="none" stroke="#ff5030" stroke-width="2"/>')
 svg += ['<text x="20" y="250" font-size="14">289/289 costs verified independently; '
-        'best SAD = 0. Functional demonstration, not hardware performance.</text>',
+        'best SAD = 0.</text>',
         '</g></svg>']
 destination = out / "demo.svg"
 destination.write_text('\n'.join(svg) + '\n')

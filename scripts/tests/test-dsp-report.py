@@ -327,8 +327,8 @@ class RunnerTests(unittest.TestCase):
                       demo_fixture(), destination)
         tree = ET.fromstring(destination.read_text())
         labels = " ".join(tree.itertext())
-        self.assertIn("Not cycles or hardware speedup", labels)
-        self.assertIn("Executed kernel instructions", labels)
+        self.assertEqual(labels.count("Hardware timing not measured."), 1)
+        self.assertIn("Executed guest instructions", labels)
         self.assertNotIn("times faster", labels)
         self.assertNotIn("cycles per", labels)
 

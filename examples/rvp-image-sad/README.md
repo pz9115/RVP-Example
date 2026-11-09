@@ -42,14 +42,11 @@ without an alignment dispatch. It requires hardware-supported unaligned loads.
 packing for unaligned rows. Neither path reads beyond the requested pixels.
 
 Both kernels use `-mtune=size`, with `-mno-strict-align` or `-mstrict-align`
-respectively. This selects a compiler cost model, not a physical core.
-The generated instructions are checked; permitting unaligned accesses alone
-does not guarantee that every tuning model chooses wide loads.
+respectively. Generated assembly is checked for the selected load path.
 
 RV32 kernels use ILP32 and RV32IMC with Zba/Zbb; P is enabled only for the
 intrinsic kernel. The Linux harness/runtime also needs A. RV64 retains
-RV64GC/LP64D. LTO and automatic vectorization are disabled. This is not an
-RVV comparison or a comparison against a hand-optimized scalar implementation.
+RV64GC/LP64D. LTO and automatic vectorization are disabled.
 
 ## Validation
 
@@ -60,7 +57,7 @@ RVV comparison or a comparison against a hand-optimized scalar implementation.
 - P-disabled execution and corrupted-image checks are negative controls.
 - A separate libc-free alignment probe tests the strict kernel with QEMU
   misaligned-access support disabled. The hardware path must fault in that
-  configuration. This does not validate glibc on a strict-alignment CPU.
+  configuration.
 
 ## Measurements
 
@@ -72,11 +69,10 @@ Allocation and data generation are outside the timed region.
 `trace-count.py` uses one guest instruction per QEMU translation block,
 disabled chaining and symbol-address filters. Two runs must match exactly.
 A 16×16 P call executes 64 packed SAD instructions on RV32 or 32 on RV64.
-Counts include kernel entry/exit and exclude the harness; they are not cycles,
-hardware throughput or application speedup.
+Counts include kernel entry/exit and exclude the harness.
 
 Reports include kernel text bytes and GCC's `-fstack-usage` static frames.
-These are not the Linux runtime footprint or whole-program maximum stack.
+QEMU instruction counts are not hardware timing.
 
 For hardware measurements, first confirm compatible P encodings and alignment
 support. Run correctness checks before measuring; record CPU, clock, caches,

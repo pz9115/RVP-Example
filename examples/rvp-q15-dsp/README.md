@@ -2,8 +2,7 @@
 
 Two portable scalar C kernels are compared with P 0.6 C intrinsic kernels:
 an exact 64-bit Q15 dot product and a causal Q15 finite impulse response (FIR)
-filter. The same sources support RV32 and RV64. P 0.6 is a developed draft,
-not a ratified extension. No hardware performance is measured.
+filter. The same sources support RV32 and RV64 with P draft 0.6.
 
 ## Run
 
@@ -47,9 +46,8 @@ make -C examples/rvp-q15-dsp host BUILD=/tmp/q15-host
 /tmp/q15-host/q15-host-test --test
 ```
 
-This host mode deliberately tests only the scalar implementation; it does
-not substitute scalar code for P or claim P validation. Guard-page tests
-require a POSIX host with `mmap`, such as the validated Linux environment.
+Host mode tests the scalar implementation. Guard-page tests require a
+POSIX host with `mmap`, such as Linux.
 
 ## Arithmetic contract
 
@@ -114,9 +112,7 @@ intrinsics would also change the sum-then-round result.
 
 The bundled header implements the selected load and arithmetic APIs. The
 [intrinsic reference](../../docs/spec/P-ext-intrinsics.adoc) documents
-`pm2wadda_i64` and `pm4adda_i16x4`. Intrinsic availability is not a promise
-that every compiler version emits the same optimized instruction sequence;
-the runner checks the actual bundled compiler's output.
+`pm2wadda_i64` and `pm4adda_i16x4`. The runner checks the generated instructions.
 
 ## Causal FIR and history
 
@@ -174,7 +170,6 @@ with QEMU misaligned access disabled. It makes 1,154 kernel calls: 289 dot
 calls and 865 FIR calls, including null-pointer empty cases. Offsets range
 over 0, 1, 2 and 3 samples; dot lengths over 0..17; FIR taps over 1..9 and
 output lengths over 0..5. The only inline assembly is the Linux exit syscall.
-This probe does not validate a full libc runtime on a strict-alignment CPU.
 
 ## Checks and measurement scope
 
@@ -208,12 +203,9 @@ The kernels use matching optimization, size-oriented tuning, alignment
 policy, no LTO, and no automatic vectorization. RV32 uses ILP32 with
 RV32IMC/Zba/Zbb, plus P only for the intrinsic object; its Linux runtime also
 requires A. RV64 keeps LP64D/RV64GC. Neither kernel uses floating point or
-RVV. Static frames and text bytes describe these kernels, not the entire
-runtime or whole-program maximum stack.
+RVV. Text bytes and static frames are reported for each kernel.
 
-Instruction-count ratios are **not cycles, memory latency, hardware
-throughput, real-time capacity, or application speedup**. No timing or
-hardware-speedup claim is made.
+QEMU guest-instruction counts are not hardware timing.
 
 The example code is MIT licensed; third-party compiler/specification
 components retain their own licenses.

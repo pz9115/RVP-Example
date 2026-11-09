@@ -129,7 +129,7 @@ def render(report, demo, destination):
             text(x, by + 24, "P" if row["kernel"] == "p" else "Scalar", 17)
             parts.append(f'<rect x="{x+65}" y="{by}" width="{bw:.1f}" height="34" fill="{color}"/>')
             text(x + 73 + bw, by + 24, f"{count:,}", 17)
-    text(40, 325, "Executed kernel instructions, including return. Not cycles or hardware speedup.", 17)
+    text(40, 325, "Executed guest instructions, including kernel entry and return.", 17)
     text(40, 375, "FIR signal: input and verified Q15 output", 23)
     signal, filtered = demo["fir"]["input"], demo["fir"]["p_q15"]
     left, right, top, bottom = 80, 1045, 420, 700
@@ -146,5 +146,6 @@ def render(report, demo, destination):
     text(175, 732, "FIR output", 17, "#c56824")
     text(850, 732, "Sample index", 15)
     text(40, 780, "Nearest rounding, ties away from zero; saturation after the complete dot product.", 17)
+    text(40, 812, "Measurement: QEMU guest instructions. Hardware timing not measured.", 12)
     parts.append('</svg>')
     destination.write_text("\n".join(parts) + "\n")

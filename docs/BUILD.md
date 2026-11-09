@@ -1,89 +1,95 @@
 # Build the tools
 
-Prebuilt tools are included in `toolchain/` and `qemu/` for x86_64 Linux.
-Building them is optional; follow [the quick start](../README.md#run) to run
-the demo with the included binaries. The instructions below rebuild the tools.
+Prebuilt tools are included for x86_64 Linux. Building is optional; the normal
+runner uses the binaries in `toolchain-rv32/`, `toolchain/` and `qemu/`.
 
-The demo needs P 0.6-enabled GCC, Binutils and QEMU. Unmodified release sources
-with the same version numbers are not sufficient.
+Unmodified release sources with the same version numbers are not sufficient:
+GCC, Binutils and QEMU must include the P draft 0.6 implementation.
 
-## Source layout
+## Sources
 
-Prepare these directories under `sources/`, or set `SOURCE_ROOT` to an
-existing source directory with the same layout:
+Prepare this layout, or set `SOURCE_ROOT` to an equivalent directory:
 
 ```text
 sources/
-  binutils/              P-enabled Binutils source
-  gcc/                   GCC source with the P intrinsic API
-  glibc/                 glibc source
-  qemu/                  P-enabled QEMU source, including required subprojects
+  binutils/
+  gcc/
+  glibc/
+  qemu/                  Including required subprojects
   linux-headers/include/ Exported Linux UAPI headers
 ```
 
-Source checkouts are local dependencies, not part of this repository.
-`VERSION.json` lists the versions used for validation.
+Sources are local dependencies, not tracked in this example repository.
+See `VERSION.json` for the validated component versions.
 
-## Requirements
+The older demo GCC snapshot has an RV32 64-bit addition selection bug.
+For RV32 builds, the recipe applies `patches/rv32-wide-add.patch` to a private
+source copy under the build directory. Original sources are not modified.
+An already-applied fix is accepted; an unexpected pattern stops the build.
+The standalone carry regression and large-image SAD test cover this fix.
 
-Host tools: GCC/G++, Make, flex, bison, texinfo, gawk, Python, Ninja and
+## Build
+
+Host tools: GCC/G++, Make, patch, flex, bison, texinfo, gawk, Python, Ninja and
 pkg-config. Development libraries: GLib, GMP, MPFR, MPC, zlib and zstd.
-QEMU's required subprojects and Python wheels must be present; its build
-disables automatic downloads.
+QEMU subprojects and Python dependencies must already be available; automatic
+downloads are disabled.
 
-## Build and run
-
-From the project root, using fresh build and install directories:
+Use fresh build directories and intentionally selected installation paths:
 
 ```bash
-# Replace the included installations only when intentionally rebuilding them.
-bash scripts/build-toolchain.sh
+XLEN=32 bash scripts/build-toolchain.sh
+XLEN=64 bash scripts/build-toolchain.sh
 bash scripts/build-qemu.sh
-python3 scripts/check-host.py
-bash scripts/present.sh
 ```
 
-Tools are installed in `toolchain/` and `qemu/`. The scripts use two jobs and
-a 3 GiB per-process virtual-memory limit. Run them sequentially on a
-memory-constrained host. Set `JOBS=1` for a single build job.
+RV32 installs to `toolchain-rv32/`: RV32IMAC, ILP32, no floating-point
+extensions. RV64 installs to `toolchain/`: RV64GC, LP64D. Each includes a
+matching libgcc and glibc sysroot. Do not mix RV32 ILP32 and ILP32D libraries.
 
-Set `SOURCE_ROOT=/path/to/sources` to use external source trees.
-`BUILD_ROOT` and `QEMU_BUILD_ROOT` select fresh build directories; by default
-they are under `/tmp`. `PREFIX` and `QEMU_PREFIX` change the install paths,
-but the demo scripts expect installations under this project.
+QEMU builds both RV32 and RV64 Linux-user emulators. The scripts use two jobs
+and a 3 GiB per-process address-space limit. Set `JOBS=1` on constrained hosts.
+The toolchain recipe also permits `JOBS=3` or `JOBS=4`; use these only with
+enough memory for concurrent compiler processes. The RV32 tools were built
+with up to four jobs under the same per-process limit.
+Build the components sequentially when memory is limited.
 
-GCC uses a C-only configuration with RV64 libgcc and a glibc sysroot.
-QEMU uses a minimal RV64 Linux-user configuration. Validation covers the
-single-threaded static demo, not arbitrary dynamic or threaded programs.
-
-## Use the tools
-
-```bash
-source env.sh
-riscv64-unknown-linux-gnu-gcc -O3 -march=rv64gc_p0p6 -mabi=lp64d \
-  -static program.c -o program
-qemu-riscv64 -R 512M -cpu rv64,x-p=true,zmmul=true,zba=true,zbb=true ./program
-```
-
-The compiler defaults to RV64GC; enable P explicitly.
-Sourcing `env.sh` also sets `RVP_EXAMPLE_ROOT`, used to locate the project
-when starting the notebook from another directory.
+`BUILD_ROOT`, `QEMU_BUILD_ROOT`, `PREFIX` and `QEMU_PREFIX` select alternate
+build/install paths. The demo runner expects the installation directories
+listed above inside the project.
 
 ## Run variants
 
 ```bash
-OUT="$PWD/build/custom-O2" OPTFLAGS=-O2 bash scripts/present.sh
+python3 scripts/check-host.py --xlen 32
+XLEN=32 ALIGNMENT=hardware bash scripts/present.sh
+XLEN=32 ALIGNMENT=strict bash scripts/present.sh
+XLEN=64 ALIGNMENT=hardware bash scripts/present.sh
+OUT="$PWD/build/custom-rv32-O2" XLEN=32 OPTFLAGS=-O2 bash scripts/present.sh
 ```
+
+Use `ALIGNMENT=hardware|strict`, not a standalone `ALIGNFLAGS` override:
+the compiler option and the C kernel's load path must agree. Both kernels use
+the same `-mtune=size` cost model. This does not identify or model a real core.
 
 Unset external compiler search variables such as `GCC_EXEC_PREFIX`,
 `COMPILER_PATH`, `LIBRARY_PATH` and `CPATH`. Use paths without whitespace.
 
+```bash
+XLEN=32 bash scripts/acceptance.sh
+XLEN=64 bash scripts/acceptance.sh
+```
+
+Each command covers O2/O3/Os and both alignment policies, with negative
+controls and a libc-free alignment test. Programs are static and
+single-threaded; arbitrary dynamic or threaded applications are not validated.
+
 ## Notebook images
 
-The notebook includes a saved PNG preview. To refresh it from validated output:
+To refresh the saved notebook preview from validated output:
 
 ```bash
-python3 scripts/update-notebook-images.py build/acceptance/O3
+python3 scripts/update-notebook-images.py build/rv32-hardware
 ```
 
 Refreshing requires ImageMagick. Viewing the notebook does not.

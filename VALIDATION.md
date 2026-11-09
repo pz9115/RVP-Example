@@ -94,6 +94,9 @@ strict-trapping CPU. It does not establish hardware timing or atomicity.
 - Eight runner tests and nine notebook-state tests pass. Notebook displays
   reject stale results after a failed run or a change of target, alignment,
   optimization or output directory.
+- The six-slide RV32 PPTX passes ZIP, XML and relationship checks; every PDF
+  page has been visually checked. The PDF uses the shared slide layout, not
+  a PowerPoint/Impress round-trip. Both charts use the current matrix.
 
 Reproduce with `XLEN=32 bash scripts/acceptance.sh` and `XLEN=64 bash
 scripts/acceptance.sh`. Reports and traces are generated in

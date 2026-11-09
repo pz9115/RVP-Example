@@ -1,0 +1,369 @@
+{
+  "input_layout": "rv{32,64}/{hardware,strict}/{O2,O3,Os}/result.json",
+  "scope": "Guest instruction counts, not cycles or hardware speedup",
+  "presentation_backend": "native",
+  "pdf_method": "Shared slide layout rendered with Matplotlib; not a PowerPoint/Impress round-trip",
+  "chart_configuration": "RV32 O3; identical logical pixels across layouts",
+  "results": [
+    {
+      "source": "rv32/hardware/O2/result.json",
+      "xlen": 32,
+      "alignment": "hardware",
+      "optimization": "O2",
+      "c_checks": 82640,
+      "image_candidates": 289,
+      "trace_sad": 22364,
+      "guest_instructions": {
+        "scalar_aligned": 2955,
+        "scalar_unaligned": 2955,
+        "p_aligned": 717,
+        "p_unaligned": 717
+      },
+      "kernel_text_bytes": {
+        "scalar": 108,
+        "p": 204
+      },
+      "static_frame_bytes": {
+        "scalar": 0,
+        "p": 32
+      },
+      "tested_versions": {
+        "gcc": "16.1.0",
+        "binutils": "2.47",
+        "glibc": "2.43",
+        "qemu": "11.1.50",
+        "linux_uapi_headers": "6.16.0"
+      }
+    },
+    {
+      "source": "rv32/hardware/O3/result.json",
+      "xlen": 32,
+      "alignment": "hardware",
+      "optimization": "O3",
+      "c_checks": 82640,
+      "image_candidates": 289,
+      "trace_sad": 22364,
+      "guest_instructions": {
+        "scalar_aligned": 2955,
+        "scalar_unaligned": 2955,
+        "p_aligned": 717,
+        "p_unaligned": 717
+      },
+      "kernel_text_bytes": {
+        "scalar": 108,
+        "p": 204
+      },
+      "static_frame_bytes": {
+        "scalar": 0,
+        "p": 32
+      },
+      "tested_versions": {
+        "gcc": "16.1.0",
+        "binutils": "2.47",
+        "glibc": "2.43",
+        "qemu": "11.1.50",
+        "linux_uapi_headers": "6.16.0"
+      }
+    },
+    {
+      "source": "rv32/hardware/Os/result.json",
+      "xlen": 32,
+      "alignment": "hardware",
+      "optimization": "Os",
+      "c_checks": 82640,
+      "image_candidates": 289,
+      "trace_sad": 22364,
+      "guest_instructions": {
+        "scalar_aligned": 3334,
+        "scalar_unaligned": 3334,
+        "p_aligned": 845,
+        "p_unaligned": 845
+      },
+      "kernel_text_bytes": {
+        "scalar": 102,
+        "p": 132
+      },
+      "static_frame_bytes": {
+        "scalar": 16,
+        "p": 16
+      },
+      "tested_versions": {
+        "gcc": "16.1.0",
+        "binutils": "2.47",
+        "glibc": "2.43",
+        "qemu": "11.1.50",
+        "linux_uapi_headers": "6.16.0"
+      }
+    },
+    {
+      "source": "rv32/strict/O2/result.json",
+      "xlen": 32,
+      "alignment": "strict",
+      "optimization": "O2",
+      "c_checks": 82640,
+      "image_candidates": 289,
+      "trace_sad": 22364,
+      "guest_instructions": {
+        "scalar_aligned": 2955,
+        "scalar_unaligned": 2955,
+        "p_aligned": 850,
+        "p_unaligned": 1954
+      },
+      "kernel_text_bytes": {
+        "scalar": 108,
+        "p": 400
+      },
+      "static_frame_bytes": {
+        "scalar": 0,
+        "p": 48
+      },
+      "tested_versions": {
+        "gcc": "16.1.0",
+        "binutils": "2.47",
+        "glibc": "2.43",
+        "qemu": "11.1.50",
+        "linux_uapi_headers": "6.16.0"
+      }
+    },
+    {
+      "source": "rv32/strict/O3/result.json",
+      "xlen": 32,
+      "alignment": "strict",
+      "optimization": "O3",
+      "c_checks": 82640,
+      "image_candidates": 289,
+      "trace_sad": 22364,
+      "guest_instructions": {
+        "scalar_aligned": 2955,
+        "scalar_unaligned": 2955,
+        "p_aligned": 850,
+        "p_unaligned": 1954
+      },
+      "kernel_text_bytes": {
+        "scalar": 108,
+        "p": 400
+      },
+      "static_frame_bytes": {
+        "scalar": 0,
+        "p": 48
+      },
+      "tested_versions": {
+        "gcc": "16.1.0",
+        "binutils": "2.47",
+        "glibc": "2.43",
+        "qemu": "11.1.50",
+        "linux_uapi_headers": "6.16.0"
+      }
+    },
+    {
+      "source": "rv32/strict/Os/result.json",
+      "xlen": 32,
+      "alignment": "strict",
+      "optimization": "Os",
+      "c_checks": 82640,
+      "image_candidates": 289,
+      "trace_sad": 22364,
+      "guest_instructions": {
+        "scalar_aligned": 3334,
+        "scalar_unaligned": 3334,
+        "p_aligned": 879,
+        "p_unaligned": 1999
+      },
+      "kernel_text_bytes": {
+        "scalar": 102,
+        "p": 296
+      },
+      "static_frame_bytes": {
+        "scalar": 16,
+        "p": 16
+      },
+      "tested_versions": {
+        "gcc": "16.1.0",
+        "binutils": "2.47",
+        "glibc": "2.43",
+        "qemu": "11.1.50",
+        "linux_uapi_headers": "6.16.0"
+      }
+    },
+    {
+      "source": "rv64/hardware/O2/result.json",
+      "xlen": 64,
+      "alignment": "hardware",
+      "optimization": "O2",
+      "c_checks": 82640,
+      "image_candidates": 289,
+      "trace_sad": 22364,
+      "guest_instructions": {
+        "scalar_aligned": 2189,
+        "scalar_unaligned": 2189,
+        "p_aligned": 438,
+        "p_unaligned": 438
+      },
+      "kernel_text_bytes": {
+        "scalar": 98,
+        "p": 178
+      },
+      "static_frame_bytes": {
+        "scalar": 16,
+        "p": 32
+      },
+      "tested_versions": {
+        "gcc": "16.1.0",
+        "binutils": "2.47",
+        "glibc": "2.43",
+        "qemu": "11.1.50",
+        "linux_uapi_headers": "6.16.0"
+      }
+    },
+    {
+      "source": "rv64/hardware/O3/result.json",
+      "xlen": 64,
+      "alignment": "hardware",
+      "optimization": "O3",
+      "c_checks": 82640,
+      "image_candidates": 289,
+      "trace_sad": 22364,
+      "guest_instructions": {
+        "scalar_aligned": 2189,
+        "scalar_unaligned": 2189,
+        "p_aligned": 438,
+        "p_unaligned": 438
+      },
+      "kernel_text_bytes": {
+        "scalar": 98,
+        "p": 178
+      },
+      "static_frame_bytes": {
+        "scalar": 16,
+        "p": 32
+      },
+      "tested_versions": {
+        "gcc": "16.1.0",
+        "binutils": "2.47",
+        "glibc": "2.43",
+        "qemu": "11.1.50",
+        "linux_uapi_headers": "6.16.0"
+      }
+    },
+    {
+      "source": "rv64/hardware/Os/result.json",
+      "xlen": 64,
+      "alignment": "hardware",
+      "optimization": "Os",
+      "c_checks": 82640,
+      "image_candidates": 289,
+      "trace_sad": 22364,
+      "guest_instructions": {
+        "scalar_aligned": 2552,
+        "scalar_unaligned": 2552,
+        "p_aligned": 503,
+        "p_unaligned": 503
+      },
+      "kernel_text_bytes": {
+        "scalar": 92,
+        "p": 114
+      },
+      "static_frame_bytes": {
+        "scalar": 16,
+        "p": 0
+      },
+      "tested_versions": {
+        "gcc": "16.1.0",
+        "binutils": "2.47",
+        "glibc": "2.43",
+        "qemu": "11.1.50",
+        "linux_uapi_headers": "6.16.0"
+      }
+    },
+    {
+      "source": "rv64/strict/O2/result.json",
+      "xlen": 64,
+      "alignment": "strict",
+      "optimization": "O2",
+      "c_checks": 82640,
+      "image_candidates": 289,
+      "trace_sad": 22364,
+      "guest_instructions": {
+        "scalar_aligned": 2189,
+        "scalar_unaligned": 2189,
+        "p_aligned": 565,
+        "p_unaligned": 1877
+      },
+      "kernel_text_bytes": {
+        "scalar": 98,
+        "p": 470
+      },
+      "static_frame_bytes": {
+        "scalar": 16,
+        "p": 96
+      },
+      "tested_versions": {
+        "gcc": "16.1.0",
+        "binutils": "2.47",
+        "glibc": "2.43",
+        "qemu": "11.1.50",
+        "linux_uapi_headers": "6.16.0"
+      }
+    },
+    {
+      "source": "rv64/strict/O3/result.json",
+      "xlen": 64,
+      "alignment": "strict",
+      "optimization": "O3",
+      "c_checks": 82640,
+      "image_candidates": 289,
+      "trace_sad": 22364,
+      "guest_instructions": {
+        "scalar_aligned": 2189,
+        "scalar_unaligned": 2189,
+        "p_aligned": 565,
+        "p_unaligned": 1877
+      },
+      "kernel_text_bytes": {
+        "scalar": 98,
+        "p": 470
+      },
+      "static_frame_bytes": {
+        "scalar": 16,
+        "p": 96
+      },
+      "tested_versions": {
+        "gcc": "16.1.0",
+        "binutils": "2.47",
+        "glibc": "2.43",
+        "qemu": "11.1.50",
+        "linux_uapi_headers": "6.16.0"
+      }
+    },
+    {
+      "source": "rv64/strict/Os/result.json",
+      "xlen": 64,
+      "alignment": "strict",
+      "optimization": "Os",
+      "c_checks": 82640,
+      "image_candidates": 289,
+      "trace_sad": 22364,
+      "guest_instructions": {
+        "scalar_aligned": 2552,
+        "scalar_unaligned": 2552,
+        "p_aligned": 503,
+        "p_unaligned": 1911
+      },
+      "kernel_text_bytes": {
+        "scalar": 92,
+        "p": 354
+      },
+      "static_frame_bytes": {
+        "scalar": 16,
+        "p": 0
+      },
+      "tested_versions": {
+        "gcc": "16.1.0",
+        "binutils": "2.47",
+        "glibc": "2.43",
+        "qemu": "11.1.50",
+        "linux_uapi_headers": "6.16.0"
+      }
+    }
+  ]
+}

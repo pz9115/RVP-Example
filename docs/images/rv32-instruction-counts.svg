@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 960 540" role="img" aria-labelledby="title desc">
+<title id="title">RV32: 76% fewer executed instructions</title>
+<desc id="desc">Zero-based bars for one 16 by 16 RV32 kernel call at O3. Executed QEMU guest instructions, not cycles or hardware speedup.</desc>
+<rect width="960" height="540" fill="white"/>
+<g font-family="Liberation Sans, sans-serif">
+<text x="42" y="84" font-size="30" fill="#142b49" text-anchor="start" font-weight="700">RV32: 76% fewer executed instructions</text>
+<text x="42" y="122" font-size="17" fill="#718092" text-anchor="start" font-weight="400">One 16 × 16 kernel call, including return · -O3 · lower is better</text>
+<path d="M320 163V400" stroke="#dae1ea"/>
+<text x="320" y="427" font-size="14" fill="#718092" text-anchor="middle" font-weight="400">0</text>
+<path d="M422 163V400" stroke="#dae1ea"/>
+<text x="422" y="427" font-size="14" fill="#718092" text-anchor="middle" font-weight="400">600</text>
+<path d="M524 163V400" stroke="#dae1ea"/>
+<text x="524" y="427" font-size="14" fill="#718092" text-anchor="middle" font-weight="400">1,200</text>
+<path d="M626 163V400" stroke="#dae1ea"/>
+<text x="626" y="427" font-size="14" fill="#718092" text-anchor="middle" font-weight="400">1,800</text>
+<path d="M728 163V400" stroke="#dae1ea"/>
+<text x="728" y="427" font-size="14" fill="#718092" text-anchor="middle" font-weight="400">2,400</text>
+<path d="M830 163V400" stroke="#dae1ea"/>
+<text x="830" y="427" font-size="14" fill="#718092" text-anchor="middle" font-weight="400">3,000</text>
+<text x="42" y="195" font-size="16" fill="#142b49" text-anchor="start" font-weight="400">Scalar C · either layout</text>
+<rect x="320" y="174" width="502.350" height="30" fill="#718092"/>
+<text x="834.3499999999999" y="197" font-size="17" fill="#142b49" text-anchor="start" font-weight="700">2,955</text>
+<text x="42" y="253" font-size="16" fill="#142b49" text-anchor="start" font-weight="400">P · hardware / either layout</text>
+<rect x="320" y="232" width="121.890" height="30" fill="#ef6438"/>
+<text x="453.89" y="255" font-size="17" fill="#142b49" text-anchor="start" font-weight="700">717</text>
+<text x="42" y="311" font-size="16" fill="#142b49" text-anchor="start" font-weight="400">P · strict / aligned</text>
+<rect x="320" y="290" width="144.500" height="30" fill="#ef6438"/>
+<text x="476.5" y="313" font-size="17" fill="#142b49" text-anchor="start" font-weight="700">850</text>
+<text x="42" y="369" font-size="16" fill="#142b49" text-anchor="start" font-weight="400">P · strict / unaligned</text>
+<rect x="320" y="348" width="332.180" height="30" fill="#ef6438"/>
+<text x="664.1800000000001" y="371" font-size="17" fill="#142b49" text-anchor="start" font-weight="700">1,954</text>
+<text x="575" y="454" font-size="14" fill="#718092" text-anchor="middle" font-weight="400">Executed guest instructions</text>
+<text x="42" y="489" font-size="10" fill="#718092" text-anchor="start" font-weight="400">Same logical pixels and tuning; no LTO or auto-vectorization. Counts are not hardware timing.</text>
+<text x="42" y="514" font-size="10" fill="#718092" text-anchor="start" font-weight="400">Equal aligned/unaligned counts do not imply equal hardware memory latency. P 0.6 is a draft.</text>
+</g></svg>

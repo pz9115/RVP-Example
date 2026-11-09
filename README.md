@@ -91,6 +91,8 @@ Aligned and unaligned measurements use identical logical pixels.
 - [Build instructions](docs/BUILD.md)
 - [Development plan](docs/RV32-PLAN.md)
 - [Demonstration outline](docs/DEMO_2_3_MIN.md)
+- [RV32 presentation slides](docs/RVP-Image-SAD-RV32.pptx) ([PDF](docs/RVP-Image-SAD-RV32.pdf))
+- [RV32 instruction chart](docs/images/rv32-instruction-counts.svg)
 - [Earlier RV64 slides](docs/RVP-Image-SAD.pptx) ([PDF](docs/RVP-Image-SAD.pdf))
 - [Tool versions](VERSION.json)
 

@@ -93,3 +93,19 @@ python3 scripts/update-notebook-images.py build/rv32-hardware
 ```
 
 Refreshing requires ImageMagick. Viewing the notebook does not.
+
+## Presentation slides
+
+Generate the current six-slide RV32 deck from a complete validation matrix:
+
+```bash
+XLEN=32 OUT="$PWD/build/slide-matrix/rv32" bash scripts/acceptance.sh
+XLEN=64 OUT="$PWD/build/slide-matrix/rv64" bash scripts/acceptance.sh
+/usr/bin/python3 scripts/build-slides.py --results build/slide-matrix \
+  --output-dir build/slides
+```
+
+The default generator uses Python, Matplotlib and Pillow, and reuses the
+earlier deck's master/theme. Text and bars in the new PPTX remain editable.
+The PDF renders the same layout; it is not a PowerPoint/Impress round-trip.
+Use `--check-only` to validate input reports without producing slides.

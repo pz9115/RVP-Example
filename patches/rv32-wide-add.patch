@@ -1,0 +1,12 @@
+diff --git a/gcc/config/riscv/riscv.md b/gcc/config/riscv/riscv.md
+--- a/gcc/config/riscv/riscv.md
++++ b/gcc/config/riscv/riscv.md
+@@ -781,7 +781,7 @@ (define_insn "*adddi3"
+   [(set (match_operand:DI          0 "register_operand" "=r,r")
+ 	(plus:DI (match_operand:DI 1 "register_operand" " r,r")
+ 		 (match_operand:DI 2 "arith_operand"    " r,I")))]
+-  "TARGET_64BIT || TARGET_RVP"
++  "TARGET_64BIT"
+   "add%i2\t%0,%1,%2"
+   [(set_attr "type" "arith")
+    (set_attr "mode" "DI")])

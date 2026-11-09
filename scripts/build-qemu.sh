@@ -1,5 +1,5 @@
 #!/bin/bash
-# Build a minimal P-enabled RV64 Linux-user emulator.
+# Build P-enabled RV32 and RV64 Linux-user emulators.
 set -euo pipefail
 root=$(cd -- "$(dirname -- "$0")/.." && pwd -P)
 source_root=${SOURCE_ROOT:-"$root/sources"}
@@ -19,10 +19,12 @@ prefix=$(cd "$prefix" && pwd -P)
 source_root=$(cd "$source_root" && pwd -P)
 cd "$build"
 "$source_root/qemu/configure" --prefix="$prefix" \
-  --target-list=riscv64-linux-user --without-default-features --enable-tcg \
+  --target-list=riscv32-linux-user,riscv64-linux-user --without-default-features --enable-tcg \
   --enable-linux-user --disable-system --disable-rust --disable-docs \
   --disable-containers --disable-download --disable-plugins
-ninja -j"$jobs" qemu-riscv64
-install -m 755 qemu-riscv64 "$prefix/bin/qemu-riscv64"
-strip --strip-debug "$prefix/bin/qemu-riscv64"
-"$prefix/bin/qemu-riscv64" --version
+ninja -j"$jobs" qemu-riscv32 qemu-riscv64
+for xlen in 32 64; do
+  install -m 755 "qemu-riscv$xlen" "$prefix/bin/qemu-riscv$xlen"
+  strip --strip-debug "$prefix/bin/qemu-riscv$xlen"
+  "$prefix/bin/qemu-riscv$xlen" --version
+done

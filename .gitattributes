@@ -1,3 +1,5 @@
 # Preserve installed tools, libraries and headers byte-for-byte.
 /toolchain/** -text -whitespace linguist-vendored
+/toolchain-rv32/** -text -whitespace linguist-vendored
 /qemu/** -text -whitespace linguist-vendored
+/patches/*.patch whitespace=-space-before-tab
